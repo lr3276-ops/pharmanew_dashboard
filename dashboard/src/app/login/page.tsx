@@ -21,7 +21,7 @@ export default function LoginPage() {
         body: JSON.stringify({ repName, password }),
       })
       if (res.ok) {
-        router.push('/dashboard')
+        window.location.href = '/dashboard'
       } else {
         const data = await res.json()
         setError(data.debug ? `${data.error} (${data.debug})` : data.error || 'Invalid credentials')
