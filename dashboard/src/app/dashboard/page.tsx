@@ -25,6 +25,19 @@ function outcomeColor(outcome: string) {
 
 export default async function DashboardPage() {
   const session = await getSession()
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-sm text-red-700">
+          <p className="font-semibold mb-1">Missing Supabase environment variables</p>
+          <p>NEXT_PUBLIC_SUPABASE_URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? 'set' : 'MISSING'}</p>
+          <p>SUPABASE_SERVICE_ROLE_KEY: {process.env.SUPABASE_SERVICE_ROLE_KEY ? 'set' : 'MISSING'}</p>
+        </div>
+      </div>
+    )
+  }
+
   const supabase = getSupabase()
   const today = new Date()
   const monthStart = format(startOfMonth(today), 'yyyy-MM-dd')
