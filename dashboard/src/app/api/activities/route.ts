@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
       materials_left: body.materials_left || null,
       gatekeeper_name: body.gatekeeper_name || null,
       gatekeeper_role: body.gatekeeper_role || null,
+      time_arrived: body.time_arrived || null,
+      time_left: body.time_left || null,
       next_visit_date: body.next_visit_date || null,
     }])
     .select()

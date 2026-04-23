@@ -17,6 +17,8 @@ export interface RepActivity {
   materials_left: string[] | null
   gatekeeper_name: string | null
   gatekeeper_role: string | null
+  time_arrived: string | null
+  time_left: string | null
   next_visit_date: string | null
 }
 
@@ -28,4 +30,5 @@ export interface Provider {
   phone: string | null
   npi: string | null
   active: boolean
+  best_visit_times: string | null
 }

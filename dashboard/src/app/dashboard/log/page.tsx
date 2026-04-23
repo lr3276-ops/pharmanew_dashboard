@@ -29,6 +29,8 @@ export default function LogActivityPage() {
     materials_left: [] as string[],
     gatekeeper_name: '',
     gatekeeper_role: '',
+    time_arrived: '',
+    time_left: '',
     next_visit_date: '',
     next_steps: '',
     notes: '',
@@ -110,6 +112,8 @@ export default function LogActivityPage() {
         materials_left: form.materials_left.length > 0 ? form.materials_left : null,
         gatekeeper_name: form.gatekeeper_name || null,
         gatekeeper_role: form.gatekeeper_role || null,
+        time_arrived: form.time_arrived || null,
+        time_left: form.time_left || null,
         next_visit_date: form.next_visit_date || null,
         next_steps: form.next_steps || null,
         notes: form.notes || null,
@@ -202,6 +206,28 @@ export default function LogActivityPage() {
             required
             className="px-3 py-2.5 border border-slate-300 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
           />
+        </div>
+
+        {/* Time arrived / left */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Time arrived</label>
+            <input
+              type="time"
+              value={form.time_arrived}
+              onChange={e => setForm(f => ({ ...f, time_arrived: e.target.value }))}
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Time left</label>
+            <input
+              type="time"
+              value={form.time_left}
+              onChange={e => setForm(f => ({ ...f, time_left: e.target.value }))}
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+            />
+          </div>
         </div>
 
         {/* Call type */}

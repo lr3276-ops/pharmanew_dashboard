@@ -45,7 +45,7 @@ export default async function ProviderDetailPage({ params }: { params: { id: str
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">{p.name}</h1>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
               <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded font-medium">{p.specialty}</span>
               <span className="text-slate-500 text-sm">{p.city}, PR</span>
               {p.phone && <span className="text-slate-500 text-sm">{p.phone}</span>}
@@ -64,7 +64,7 @@ export default async function ProviderDetailPage({ params }: { params: { id: str
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Total visits</p>
           <p className="text-2xl font-bold text-slate-800 mt-1">{acts.length}</p>
@@ -84,6 +84,19 @@ export default async function ProviderDetailPage({ params }: { params: { id: str
         </div>
       </div>
 
+      {p.best_visit_times && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8 flex items-start gap-2">
+          <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider">Best time to visit</p>
+            <p className="text-sm text-amber-900 mt-0.5">{p.best_visit_times}</p>
+          </div>
+        </div>
+      )}
+      {!p.best_visit_times && <div className="mb-8" />}
+
       {/* Activity history */}
       <h2 className="text-sm font-semibold text-slate-700 mb-3">Activity history</h2>
       {acts.length === 0 ? (
@@ -95,8 +108,17 @@ export default async function ProviderDetailPage({ params }: { params: { id: str
           {acts.map(a => (
             <div key={a.id} className="bg-white rounded-xl border border-slate-200 p-5">
               <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <p className="font-medium text-slate-800">{format(new Date(a.visit_date + 'T12:00:00'), 'MMMM d, yyyy')}</p>
+                  {(a.time_arrived || a.time_left) && (
+                    <span className="text-slate-400 text-xs">
+                      {a.time_arrived && a.time_left
+                        ? `${a.time_arrived} – ${a.time_left}`
+                        : a.time_arrived
+                        ? `Arrived ${a.time_arrived}`
+                        : `Left ${a.time_left}`}
+                    </span>
+                  )}
                   <span className="text-slate-400 text-sm">{a.call_type}</span>
                   <span className="text-slate-400 text-sm">· {a.rep_name}</span>
                 </div>
