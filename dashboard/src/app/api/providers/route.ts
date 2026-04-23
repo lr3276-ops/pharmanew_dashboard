@@ -7,9 +7,8 @@ export async function GET() {
   const { data, error } = await supabase
     .from('providers')
     .select('id, name, specialty, city')
-    .eq('active', true)
     .order('name')
 
-  if (error) return NextResponse.json([], { status: 200 })
+  if (error) return NextResponse.json({ error: error.message, hint: error.hint }, { status: 500 })
   return NextResponse.json(data ?? [])
 }

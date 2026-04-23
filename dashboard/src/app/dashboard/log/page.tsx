@@ -137,7 +137,9 @@ export default function LogActivityPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Provider search */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Provider *</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            Provider * <span className="text-slate-400 font-normal text-xs">({providers.length} loaded)</span>
+          </label>
           <div className="relative" ref={dropdownRef}>
             <input
               type="text"
