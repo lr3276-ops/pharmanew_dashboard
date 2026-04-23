@@ -14,16 +14,21 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ repName, password }),
-    })
-    if (res.ok) {
-      router.push('/dashboard')
-    } else {
-      const data = await res.json()
-      setError(data.error || 'Invalid credentials')
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repName, password }),
+      })
+      if (res.ok) {
+        router.push('/dashboard')
+      } else {
+        const data = await res.json()
+        setError(data.error || 'Invalid credentials')
+        setLoading(false)
+      }
+    } catch {
+      setError('Connection error — please try again.')
       setLoading(false)
     }
   }
