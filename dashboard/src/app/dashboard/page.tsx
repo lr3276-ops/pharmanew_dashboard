@@ -38,18 +38,25 @@ export default async function DashboardPage() {
     )
   }
 
+  let supabaseError: string | null = null
   const supabase = getSupabase()
   const today = new Date()
   const monthStart = format(startOfMonth(today), 'yyyy-MM-dd')
   const monthLabel = format(today, 'MMMM yyyy')
 
+  let myTotal = 0, myVisits = 0, myCalls = 0
+  let myProviders: { provider_id: number }[] = []
+  let recentMine: RepActivity[] = []
+  let recentTeam: RepActivity[] = []
+
+  try {
   const [
-    { count: myTotal },
-    { count: myVisits },
-    { count: myCalls },
-    { data: myProviders },
-    { data: recentMine },
-    { data: recentTeam },
+    { count: _myTotal },
+    { count: _myVisits },
+    { count: _myCalls },
+    { data: _myProviders },
+    { data: _recentMine },
+    { data: _recentTeam },
   ] = await Promise.all([
     supabase.from('rep_activities').select('*', { count: 'exact', head: true })
       .eq('rep_name', session!.repName).gte('visit_date', monthStart),
@@ -71,8 +78,29 @@ export default async function DashboardPage() {
       .order('visit_date', { ascending: false })
       .limit(10),
   ])
+    myTotal = _myTotal ?? 0
+    myVisits = _myVisits ?? 0
+    myCalls = _myCalls ?? 0
+    myProviders = (_myProviders || []) as { provider_id: number }[]
+    recentMine = (_recentMine || []) as RepActivity[]
+    recentTeam = (_recentTeam || []) as RepActivity[]
+  } catch (e: unknown) {
+    supabaseError = e instanceof Error ? e.message : String(e)
+  }
 
-  const uniqueProviders = new Set((myProviders || []).map((a: { provider_id: number }) => a.provider_id)).size
+  if (supabaseError) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-sm text-red-700">
+          <p className="font-semibold mb-1">Supabase connection error</p>
+          <p className="font-mono text-xs mt-2 break-all">{supabaseError}</p>
+          <p className="mt-3 text-slate-500">Check that NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are correct in Vercel.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const uniqueProviders = new Set(myProviders.map((a) => a.provider_id)).size
 
   return (
     <div className="p-8 max-w-5xl">
