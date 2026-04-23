@@ -38,7 +38,7 @@ export default function LogActivityPage() {
   useEffect(() => {
     fetch('/api/providers')
       .then(r => r.json())
-      .then(setProviders)
+      .then(data => setProviders(Array.isArray(data) ? data : []))
       .catch(() => {})
   }, [])
 
