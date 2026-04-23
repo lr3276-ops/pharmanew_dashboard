@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   if (!REPS.includes(repName) || password.trim() !== expectedPassword) {
     return NextResponse.json({
       error: 'Invalid credentials',
-      debug: !expectedPassword ? 'DASHBOARD_PASSWORD env var is not set' : 'Password mismatch'
+      debug: !expectedPassword ? 'DASHBOARD_PASSWORD env var is not set' : `Password mismatch — received ${password.trim().length} chars, expected ${expectedPassword.length} chars`
     }, { status: 401 })
   }
 
