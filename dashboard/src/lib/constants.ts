@@ -23,6 +23,12 @@ export const CALL_TYPES = [
   'Email / Message',
 ]
 
+export const MATERIALS = [
+  'Instruction Kit',
+  'Coupons',
+  'Prescriptions',
+]
+
 export const OUTCOMES = [
   'Very Positive',
   'Positive',

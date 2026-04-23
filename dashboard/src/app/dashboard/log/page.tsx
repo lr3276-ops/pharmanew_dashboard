@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { PRODUCTS, CALL_TYPES, OUTCOMES } from '@/lib/constants'
+import { PRODUCTS, CALL_TYPES, OUTCOMES, MATERIALS } from '@/lib/constants'
 import type { Provider } from '@/types'
 
 interface ProviderOption {
@@ -26,6 +26,9 @@ export default function LogActivityPage() {
     outcome: '',
     samples_left: false,
     literature_left: false,
+    materials_left: [] as string[],
+    gatekeeper_name: '',
+    gatekeeper_role: '',
     next_visit_date: '',
     next_steps: '',
     notes: '',
@@ -72,6 +75,15 @@ export default function LogActivityPage() {
     }))
   }
 
+  function toggleMaterial(material: string) {
+    setForm(f => ({
+      ...f,
+      materials_left: f.materials_left.includes(material)
+        ? f.materials_left.filter(m => m !== material)
+        : [...f.materials_left, material],
+    }))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!selectedProvider) { setError('Please select a provider'); return }
@@ -95,6 +107,9 @@ export default function LogActivityPage() {
         outcome: form.outcome,
         samples_left: form.samples_left,
         literature_left: form.literature_left,
+        materials_left: form.materials_left.length > 0 ? form.materials_left : null,
+        gatekeeper_name: form.gatekeeper_name || null,
+        gatekeeper_role: form.gatekeeper_role || null,
         next_visit_date: form.next_visit_date || null,
         next_steps: form.next_steps || null,
         notes: form.notes || null,
@@ -265,6 +280,48 @@ export default function LogActivityPage() {
             />
             <span className="text-sm text-slate-700">Literature left</span>
           </label>
+        </div>
+
+        {/* Materials left */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Materials left</label>
+          <div className="flex flex-wrap gap-2">
+            {MATERIALS.map(m => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => toggleMaterial(m)}
+                className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                  form.materials_left.includes(m)
+                    ? 'bg-slate-800 border-slate-800 text-white font-medium'
+                    : 'border-slate-300 text-slate-600 hover:border-slate-500'
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Gatekeeper */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Gatekeeper</label>
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="text"
+              value={form.gatekeeper_name}
+              onChange={e => setForm(f => ({ ...f, gatekeeper_name: e.target.value }))}
+              placeholder="Name"
+              className="px-3 py-2.5 border border-slate-300 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+            />
+            <input
+              type="text"
+              value={form.gatekeeper_role}
+              onChange={e => setForm(f => ({ ...f, gatekeeper_role: e.target.value }))}
+              placeholder="Role (e.g. receptionist, nurse)"
+              className="px-3 py-2.5 border border-slate-300 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+            />
+          </div>
         </div>
 
         {/* Next visit */}

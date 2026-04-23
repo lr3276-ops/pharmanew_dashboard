@@ -25,6 +25,9 @@ export async function POST(request: NextRequest) {
       notes: body.notes || null,
       samples_left: body.samples_left ?? false,
       literature_left: body.literature_left ?? false,
+      materials_left: body.materials_left || null,
+      gatekeeper_name: body.gatekeeper_name || null,
+      gatekeeper_role: body.gatekeeper_role || null,
       next_visit_date: body.next_visit_date || null,
     }])
     .select()

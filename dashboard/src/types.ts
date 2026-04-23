@@ -14,6 +14,9 @@ export interface RepActivity {
   notes: string | null
   samples_left: boolean
   literature_left: boolean
+  materials_left: string[] | null
+  gatekeeper_name: string | null
+  gatekeeper_role: string | null
   next_visit_date: string | null
 }
 
