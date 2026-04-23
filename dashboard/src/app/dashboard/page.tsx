@@ -5,20 +5,20 @@ import { format, startOfMonth } from 'date-fns'
 import Link from 'next/link'
 import type { RepActivity } from '@/types'
 
-function KPICard({ label, value, sub }: { label: string; value: number; sub?: string }) {
+function KPICard({ label, value, sub, accent }: { label: string; value: number; sub?: string; accent?: string }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className="text-3xl font-bold text-slate-800 mt-1">{value}</p>
-      {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
+    <div className="bg-white rounded-xl border border-pn-border p-5">
+      <p className="text-xs font-bold text-pn-faint uppercase tracking-wider">{label}</p>
+      <p className={`text-3xl font-extrabold mt-1 ${accent || 'text-pn-dark'}`}>{value}</p>
+      {sub && <p className="text-xs text-pn-faint mt-1">{sub}</p>}
     </div>
   )
 }
 
 function outcomeColor(outcome: string) {
-  if (outcome.includes('Very Positive')) return 'bg-green-100 text-green-800'
-  if (outcome.includes('Positive')) return 'bg-emerald-100 text-emerald-800'
-  if (outcome.includes('Neutral')) return 'bg-slate-100 text-slate-600'
+  if (outcome.includes('Very Positive')) return 'bg-pn-lime text-pn-green-dark'
+  if (outcome.includes('Positive')) return 'bg-green-100 text-green-800'
+  if (outcome.includes('Neutral')) return 'bg-pn-bg text-pn-muted'
   if (outcome.includes('Follow')) return 'bg-yellow-100 text-yellow-800'
   return 'bg-red-100 text-red-700'
 }
@@ -94,7 +94,7 @@ export default async function DashboardPage() {
         <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-sm text-red-700">
           <p className="font-semibold mb-1">Supabase connection error</p>
           <p className="font-mono text-xs mt-2 break-all">{supabaseError}</p>
-          <p className="mt-3 text-slate-500">Check that NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are correct in Vercel.</p>
+          <p className="mt-3 text-pn-muted">Check that NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are correct in Vercel.</p>
         </div>
       </div>
     )
@@ -106,12 +106,12 @@ export default async function DashboardPage() {
     <div className="p-8 max-w-5xl">
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Welcome back, {session!.repName}</h1>
-          <p className="text-slate-500 text-sm mt-1">{format(today, 'EEEE, MMMM d, yyyy')}</p>
+          <h1 className="text-2xl font-extrabold text-pn-dark">Welcome back, {session!.repName}</h1>
+          <p className="text-pn-muted text-sm mt-1 font-medium">{format(today, 'EEEE, MMMM d, yyyy')}</p>
         </div>
         <Link
           href="/dashboard/log"
-          className="flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
+          className="flex items-center gap-2 bg-pn-green hover:bg-pn-green-dark text-white text-sm font-bold px-4 py-2.5 rounded-lg transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -121,42 +121,42 @@ export default async function DashboardPage() {
       </div>
 
       {/* KPIs */}
-      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">My activity — {monthLabel}</p>
+      <p className="text-xs font-bold text-pn-faint uppercase tracking-wider mb-3">My activity — {monthLabel}</p>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <KPICard label="Total activities" value={myTotal ?? 0} />
-        <KPICard label="In-person visits" value={myVisits ?? 0} />
-        <KPICard label="Phone calls" value={myCalls ?? 0} />
-        <KPICard label="Providers covered" value={uniqueProviders} />
+        <KPICard label="Total activities" value={myTotal ?? 0} accent="text-pn-navy" />
+        <KPICard label="In-person visits" value={myVisits ?? 0} accent="text-pn-green" />
+        <KPICard label="Phone calls" value={myCalls ?? 0} accent="text-pn-blue" />
+        <KPICard label="Providers covered" value={uniqueProviders} accent="text-pn-navy" />
       </div>
 
       {/* My recent activities */}
       <div className="mb-10">
-        <h2 className="text-sm font-semibold text-slate-700 mb-3">My recent activities</h2>
+        <h2 className="text-sm font-bold text-pn-dark mb-3">My recent activities</h2>
         {!recentMine || recentMine.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
-            No activities yet. <Link href="/dashboard/log" className="text-green-700 font-medium">Log your first one.</Link>
+          <div className="bg-white rounded-xl border border-pn-border p-8 text-center text-pn-faint text-sm">
+            No activities yet. <Link href="/dashboard/log" className="text-pn-green font-bold">Log your first one.</Link>
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-xl border border-pn-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Provider</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Type</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Products</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Outcome</th>
+                <tr className="border-b border-pn-border bg-pn-bg">
+                  <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Date</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Provider</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Type</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Products</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Outcome</th>
                 </tr>
               </thead>
               <tbody>
                 {(recentMine as RepActivity[]).map((a, i) => (
-                  <tr key={a.id} className={i < recentMine!.length - 1 ? 'border-b border-slate-50' : ''}>
-                    <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{format(new Date(a.visit_date + 'T12:00:00'), 'MMM d, yyyy')}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800">{a.provider_name}</td>
-                    <td className="px-4 py-3 text-slate-500">{a.call_type}</td>
-                    <td className="px-4 py-3 text-slate-500">{(a.products_discussed || []).join(', ') || '—'}</td>
+                  <tr key={a.id} className={i < recentMine!.length - 1 ? 'border-b border-pn-border' : ''}>
+                    <td className="px-4 py-3 text-pn-muted whitespace-nowrap">{format(new Date(a.visit_date + 'T12:00:00'), 'MMM d, yyyy')}</td>
+                    <td className="px-4 py-3 font-semibold text-pn-dark">{a.provider_name}</td>
+                    <td className="px-4 py-3 text-pn-muted">{a.call_type}</td>
+                    <td className="px-4 py-3 text-pn-muted">{(a.products_discussed || []).join(', ') || '—'}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${outcomeColor(a.outcome)}`}>
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${outcomeColor(a.outcome)}`}>
                         {a.outcome}
                       </span>
                     </td>
@@ -170,32 +170,32 @@ export default async function DashboardPage() {
 
       {/* Team feed */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-700 mb-3">Team — recent activity</h2>
+        <h2 className="text-sm font-bold text-pn-dark mb-3">Team — recent activity</h2>
         {!recentTeam || recentTeam.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
+          <div className="bg-white rounded-xl border border-pn-border p-8 text-center text-pn-faint text-sm">
             No team activity yet.
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-xl border border-pn-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Rep</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Provider</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Type</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Outcome</th>
+                <tr className="border-b border-pn-border bg-pn-bg">
+                  <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Date</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Rep</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Provider</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Type</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Outcome</th>
                 </tr>
               </thead>
               <tbody>
                 {(recentTeam as RepActivity[]).map((a, i) => (
-                  <tr key={a.id} className={i < recentTeam!.length - 1 ? 'border-b border-slate-50' : ''}>
-                    <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{format(new Date(a.visit_date + 'T12:00:00'), 'MMM d, yyyy')}</td>
-                    <td className="px-4 py-3 text-slate-600">{a.rep_name}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800">{a.provider_name}</td>
-                    <td className="px-4 py-3 text-slate-500">{a.call_type}</td>
+                  <tr key={a.id} className={i < recentTeam!.length - 1 ? 'border-b border-pn-border' : ''}>
+                    <td className="px-4 py-3 text-pn-muted whitespace-nowrap">{format(new Date(a.visit_date + 'T12:00:00'), 'MMM d, yyyy')}</td>
+                    <td className="px-4 py-3 text-pn-muted font-medium">{a.rep_name}</td>
+                    <td className="px-4 py-3 font-semibold text-pn-dark">{a.provider_name}</td>
+                    <td className="px-4 py-3 text-pn-muted">{a.call_type}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${outcomeColor(a.outcome)}`}>
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${outcomeColor(a.outcome)}`}>
                         {a.outcome}
                       </span>
                     </td>

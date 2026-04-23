@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 import { getSupabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 import Link from 'next/link'
-import type { Provider, RepActivity } from '@/types'
+import type { Provider } from '@/types'
 
 export default async function ProvidersPage() {
   const supabase = getSupabase()
@@ -12,7 +12,6 @@ export default async function ProvidersPage() {
     supabase.from('rep_activities').select('provider_id, visit_date, next_visit_date').order('visit_date', { ascending: false }),
   ])
 
-  // Build stats map per provider
   const statsMap = new Map<number, { lastVisit: string; nextVisit: string | null; count: number }>()
   for (const a of (activities || []) as { provider_id: number; visit_date: string; next_visit_date: string | null }[]) {
     if (!statsMap.has(a.provider_id)) {
@@ -31,8 +30,8 @@ export default async function ProvidersPage() {
   return (
     <div className="p-8">
       <div className="mb-7">
-        <h1 className="text-2xl font-bold text-slate-800">Providers</h1>
-        <p className="text-slate-500 text-sm mt-1">{(providers || []).length} providers in Puerto Rico</p>
+        <h1 className="text-2xl font-extrabold text-pn-dark">Providers</h1>
+        <p className="text-pn-muted text-sm mt-1 font-medium">{(providers || []).length} providers in Puerto Rico</p>
       </div>
 
       <ProvidersClient providers={providers || []} statsMap={Object.fromEntries(statsMap)} specialties={specialties as string[]} />
@@ -40,68 +39,61 @@ export default async function ProvidersPage() {
   )
 }
 
-// Inline client component using a trick — we'll make the page a server component
-// and render a simple filterable list as a server-rendered static list
-// (filtering will require a separate client component file for full interactivity)
 function ProvidersClient({
   providers,
   statsMap,
-  specialties,
 }: {
   providers: Provider[]
   statsMap: Record<number, { lastVisit: string; nextVisit: string | null; count: number }>
   specialties: string[]
 }) {
   return (
-    <div>
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Provider</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Specialty</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">City</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Visits</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Last visit</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Next visit</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {providers.map((p, i) => {
-              const stats = statsMap[p.id]
-              return (
-                <tr key={p.id} className={i < providers.length - 1 ? 'border-b border-slate-50' : ''}>
-                  <td className="px-4 py-3 font-medium text-slate-800">{p.name}</td>
-                  <td className="px-4 py-3">
-                    <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded font-medium">
-                      {p.specialty || '—'}
+    <div className="bg-white rounded-xl border border-pn-border overflow-hidden">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-pn-border bg-pn-bg">
+            <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Provider</th>
+            <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Specialty</th>
+            <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">City</th>
+            <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Visits</th>
+            <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Last visit</th>
+            <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Next visit</th>
+            <th className="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {providers.map((p, i) => {
+            const stats = statsMap[p.id]
+            return (
+              <tr key={p.id} className={`hover:bg-pn-bg transition-colors ${i < providers.length - 1 ? 'border-b border-pn-border' : ''}`}>
+                <td className="px-4 py-3 font-semibold text-pn-dark">{p.name}</td>
+                <td className="px-4 py-3">
+                  <span className="inline-block px-2 py-0.5 bg-pn-sky text-pn-navy text-xs rounded font-semibold">
+                    {p.specialty || '—'}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-pn-muted">{p.city || '—'}</td>
+                <td className="px-4 py-3 font-semibold text-pn-navy">{stats?.count ?? 0}</td>
+                <td className="px-4 py-3 text-pn-muted">
+                  {stats?.lastVisit ? format(new Date(stats.lastVisit + 'T12:00:00'), 'MMM d, yyyy') : '—'}
+                </td>
+                <td className="px-4 py-3">
+                  {stats?.nextVisit ? (
+                    <span className="text-pn-green font-semibold">
+                      {format(new Date(stats.nextVisit + 'T12:00:00'), 'MMM d, yyyy')}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">{p.city || '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">{stats?.count ?? 0}</td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {stats?.lastVisit ? format(new Date(stats.lastVisit + 'T12:00:00'), 'MMM d, yyyy') : '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    {stats?.nextVisit ? (
-                      <span className="text-green-700 font-medium">
-                        {format(new Date(stats.nextVisit + 'T12:00:00'), 'MMM d, yyyy')}
-                      </span>
-                    ) : '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link href={`/dashboard/providers/${p.id}`} className="text-xs text-green-700 hover:underline font-medium">
-                      View
-                    </Link>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+                  ) : <span className="text-pn-faint">—</span>}
+                </td>
+                <td className="px-4 py-3">
+                  <Link href={`/dashboard/providers/${p.id}`} className="text-xs text-pn-blue hover:text-pn-navy font-bold transition-colors">
+                    View →
+                  </Link>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }

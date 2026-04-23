@@ -31,4 +31,5 @@ export interface Provider {
   npi: string | null
   active: boolean
   best_visit_times: string | null
+  best_visit_days: string | null
 }
