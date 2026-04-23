@@ -55,8 +55,8 @@ export default function Sidebar({ repName }: { repName: string }) {
   }
 
   return (
-    <aside className="w-56 bg-pn-navy min-h-screen flex flex-col flex-shrink-0">
-      <div className="px-5 py-4 border-b border-white/10 flex items-center justify-center min-h-[72px]">
+    <aside className="w-56 bg-pn-bg border-r border-pn-border min-h-screen flex flex-col flex-shrink-0">
+      <div className="px-5 py-4 border-b border-pn-border flex items-center justify-center min-h-[72px]">
         <Image
           src="/logo-landscape.png"
           alt="PharmaNew"
@@ -76,8 +76,8 @@ export default function Sidebar({ repName }: { repName: string }) {
               href={href}
               className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 active
-                  ? 'bg-pn-green text-white'
-                  : 'text-white/60 hover:text-white hover:bg-white/10'
+                  ? 'bg-pn-navy text-white'
+                  : 'text-pn-muted hover:text-pn-dark hover:bg-pn-border'
               }`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
@@ -87,14 +87,14 @@ export default function Sidebar({ repName }: { repName: string }) {
         })}
       </nav>
 
-      <div className="px-3 py-4 border-t border-white/10">
+      <div className="px-3 py-4 border-t border-pn-border">
         <div className="px-3 py-2 mb-1">
-          <p className="text-white/40 text-xs uppercase tracking-wider font-semibold">Signed in as</p>
-          <p className="text-white text-sm font-semibold mt-0.5">{repName}</p>
+          <p className="text-pn-faint text-xs uppercase tracking-wider font-semibold">Signed in as</p>
+          <p className="text-pn-dark text-sm font-semibold mt-0.5">{repName}</p>
         </div>
         <button
           onClick={logout}
-          className="w-full flex items-center gap-2.5 px-3 py-2 text-white/50 hover:text-white text-sm rounded-lg hover:bg-white/10 transition-colors"
+          className="w-full flex items-center gap-2.5 px-3 py-2 text-pn-muted hover:text-pn-dark text-sm rounded-lg hover:bg-pn-border transition-colors"
         >
           <IconLogOut className="w-4 h-4 flex-shrink-0" />
           Sign out
