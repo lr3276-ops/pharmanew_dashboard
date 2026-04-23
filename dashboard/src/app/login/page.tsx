@@ -24,7 +24,7 @@ export default function LoginPage() {
         router.push('/dashboard')
       } else {
         const data = await res.json()
-        setError(data.error || 'Invalid credentials')
+        setError(data.debug ? `${data.error} (${data.debug})` : data.error || 'Invalid credentials')
         setLoading(false)
       }
     } catch {

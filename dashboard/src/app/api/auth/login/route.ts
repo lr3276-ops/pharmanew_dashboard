@@ -5,8 +5,12 @@ import { REPS } from '@/lib/constants'
 export async function POST(request: NextRequest) {
   const { repName, password } = await request.json()
 
-  if (!REPS.includes(repName) || password !== process.env.DASHBOARD_PASSWORD) {
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+  const expectedPassword = process.env.DASHBOARD_PASSWORD?.trim()
+  if (!REPS.includes(repName) || password.trim() !== expectedPassword) {
+    return NextResponse.json({
+      error: 'Invalid credentials',
+      debug: !expectedPassword ? 'DASHBOARD_PASSWORD env var is not set' : 'Password mismatch'
+    }, { status: 401 })
   }
 
   const token = await createToken(repName)
