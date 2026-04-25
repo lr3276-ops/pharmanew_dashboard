@@ -9,19 +9,15 @@ export default async function ProvidersPage() {
 
   const [{ data: providers }, { data: activities }] = await Promise.all([
     supabase.from('providers').select('*').eq('active', true).order('name'),
-    supabase.from('rep_activities').select('provider_id, visit_date, next_visit_date').order('visit_date', { ascending: false }),
+    supabase.from('rep_activities').select('provider_id, visit_date').order('visit_date', { ascending: false }),
   ])
 
-  const statsMap = new Map<number, { lastVisit: string; nextVisit: string | null; count: number }>()
-  for (const a of (activities || []) as { provider_id: number; visit_date: string; next_visit_date: string | null }[]) {
+  const statsMap = new Map<number, { lastVisit: string; count: number }>()
+  for (const a of (activities || []) as { provider_id: number; visit_date: string }[]) {
     if (!statsMap.has(a.provider_id)) {
-      statsMap.set(a.provider_id, { lastVisit: a.visit_date, nextVisit: a.next_visit_date, count: 1 })
+      statsMap.set(a.provider_id, { lastVisit: a.visit_date, count: 1 })
     } else {
-      const s = statsMap.get(a.provider_id)!
-      s.count++
-      if (a.next_visit_date && (!s.nextVisit || a.next_visit_date > s.nextVisit)) {
-        s.nextVisit = a.next_visit_date
-      }
+      statsMap.get(a.provider_id)!.count++
     }
   }
 
@@ -44,7 +40,7 @@ function ProvidersClient({
   statsMap,
 }: {
   providers: Provider[]
-  statsMap: Record<number, { lastVisit: string; nextVisit: string | null; count: number }>
+  statsMap: Record<number, { lastVisit: string; count: number }>
   specialties: string[]
 }) {
   return (
@@ -55,9 +51,9 @@ function ProvidersClient({
             <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Provider</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Specialty</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">City</th>
+            <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">NPI</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Visits</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Last visit</th>
-            <th className="text-left px-4 py-3 text-xs font-bold text-pn-faint uppercase tracking-wider">Next visit</th>
             <th className="px-4 py-3"></th>
           </tr>
         </thead>
@@ -87,16 +83,10 @@ function ProvidersClient({
                   </span>
                 </td>
                 <td className="px-4 py-3 text-pn-muted">{p.city || '—'}</td>
+                <td className="px-4 py-3 font-mono text-xs text-pn-muted">{p.npi || '—'}</td>
                 <td className="px-4 py-3 font-semibold text-pn-navy">{stats?.count ?? 0}</td>
                 <td className="px-4 py-3 text-pn-muted">
                   {stats?.lastVisit ? format(new Date(stats.lastVisit + 'T12:00:00'), 'MMM d, yyyy') : '—'}
-                </td>
-                <td className="px-4 py-3">
-                  {stats?.nextVisit ? (
-                    <span className="text-pn-green font-semibold">
-                      {format(new Date(stats.nextVisit + 'T12:00:00'), 'MMM d, yyyy')}
-                    </span>
-                  ) : <span className="text-pn-faint">—</span>}
                 </td>
                 <td className="px-4 py-3">
                   <Link href={`/dashboard/providers/${p.id}`} className="text-xs text-pn-blue hover:text-pn-navy font-bold transition-colors">
