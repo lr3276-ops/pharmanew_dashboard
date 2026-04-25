@@ -7,6 +7,7 @@ const montserrat = Montserrat({ subsets: ['latin'], weight: ['400', '500', '600'
 export const metadata: Metadata = {
   title: 'PharmaNew Dashboard',
   description: 'Internal sales dashboard',
+  icons: { icon: '/symbol-logo.svg' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
