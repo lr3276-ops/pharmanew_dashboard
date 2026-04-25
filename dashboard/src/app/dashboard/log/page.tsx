@@ -9,6 +9,10 @@ interface ProviderOption {
   name: string
   specialty: string | null
   city: string | null
+  phone: string | null
+  npi: string | null
+  best_visit_days: string | null
+  best_visit_times: string | null
 }
 
 export default function LogActivityPage() {
@@ -31,7 +35,6 @@ export default function LogActivityPage() {
     gatekeeper_role: '',
     time_arrived: '',
     time_left: '',
-    next_visit_date: '',
     next_steps: '',
     notes: '',
   })
@@ -114,7 +117,6 @@ export default function LogActivityPage() {
         gatekeeper_role: form.gatekeeper_role || null,
         time_arrived: form.time_arrived || null,
         time_left: form.time_left || null,
-        next_visit_date: form.next_visit_date || null,
         next_steps: form.next_steps || null,
         notes: form.notes || null,
       }),
@@ -172,9 +174,30 @@ export default function LogActivityPage() {
               className={inputClass}
             />
             {selectedProvider && (
-              <div className="mt-1.5 flex items-center gap-2">
-                <span className="text-xs text-pn-green font-bold">{selectedProvider.name}</span>
-                <span className="text-xs text-pn-faint">{selectedProvider.specialty} · {selectedProvider.city}</span>
+              <div className="mt-3 bg-pn-sky border border-[#b6ddf5] rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-extrabold text-pn-dark">{selectedProvider.name}</span>
+                  {selectedProvider.specialty && (
+                    <span className="inline-block px-2 py-0.5 bg-white/70 text-pn-navy text-xs rounded font-bold">{selectedProvider.specialty}</span>
+                  )}
+                  {selectedProvider.city && (
+                    <span className="text-xs text-pn-muted">{selectedProvider.city}, PR</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-x-6 gap-y-1">
+                  {selectedProvider.npi && (
+                    <p className="text-xs text-pn-muted"><span className="font-bold text-pn-navy">NPI:</span> {selectedProvider.npi}</p>
+                  )}
+                  {selectedProvider.phone && (
+                    <p className="text-xs text-pn-muted"><span className="font-bold text-pn-navy">Phone:</span> {selectedProvider.phone}</p>
+                  )}
+                  {selectedProvider.best_visit_days && (
+                    <p className="text-xs text-pn-muted"><span className="font-bold text-pn-navy">Best days:</span> {selectedProvider.best_visit_days}</p>
+                  )}
+                  {selectedProvider.best_visit_times && (
+                    <p className="text-xs text-pn-muted"><span className="font-bold text-pn-navy">Best times:</span> {selectedProvider.best_visit_times}</p>
+                  )}
+                </div>
               </div>
             )}
             {showDropdown && providerSearch.length > 0 && (
@@ -351,17 +374,6 @@ export default function LogActivityPage() {
               className={inputClass}
             />
           </div>
-        </div>
-
-        {/* Next visit */}
-        <div>
-          <label className={labelClass}>Next visit date</label>
-          <input
-            type="date"
-            value={form.next_visit_date}
-            onChange={e => setForm(f => ({ ...f, next_visit_date: e.target.value }))}
-            className="px-3 py-2.5 border border-pn-border-mid rounded-lg text-pn-dark text-sm focus:outline-none focus:ring-2 focus:ring-pn-green focus:border-transparent"
-          />
         </div>
 
         {/* Next steps */}

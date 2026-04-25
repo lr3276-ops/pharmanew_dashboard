@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { getSupabase } from '@/lib/supabase'
-import { format } from 'date-fns'
+import { format, differenceInDays, parseISO } from 'date-fns'
 import Link from 'next/link'
 import type { Provider } from '@/types'
 
@@ -66,7 +66,21 @@ function ProvidersClient({
             const stats = statsMap[p.id]
             return (
               <tr key={p.id} className={`hover:bg-pn-bg transition-colors ${i < providers.length - 1 ? 'border-b border-pn-border' : ''}`}>
-                <td className="px-4 py-3 font-semibold text-pn-dark">{p.name}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-pn-dark">{p.name}</span>
+                    {(() => {
+                      if (!stats?.lastVisit) return (
+                        <span className="inline-block px-2 py-0.5 bg-orange-100 text-orange-700 text-[11px] font-bold rounded">Never visited</span>
+                      )
+                      const days = differenceInDays(new Date(), parseISO(stats.lastVisit))
+                      if (days >= 30) return (
+                        <span className="inline-block px-2 py-0.5 bg-red-100 text-red-700 text-[11px] font-bold rounded">⚠ {days}d overdue</span>
+                      )
+                      return null
+                    })()}
+                  </div>
+                </td>
                 <td className="px-4 py-3">
                   <span className="inline-block px-2 py-0.5 bg-pn-sky text-pn-navy text-xs rounded font-semibold">
                     {p.specialty || '—'}

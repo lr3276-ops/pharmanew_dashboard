@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { getSupabase } from '@/lib/supabase'
-import { format } from 'date-fns'
+import { format, differenceInDays, parseISO } from 'date-fns'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { RepActivity, Provider } from '@/types'
@@ -32,9 +32,25 @@ export default async function ProviderDetailPage({ params }: { params: { id: str
 
   const lastActivity = acts[0]
   const nextVisit = acts.find(a => a.next_visit_date)?.next_visit_date
+  const daysSinceVisit = lastActivity ? differenceInDays(new Date(), parseISO(lastActivity.visit_date)) : null
 
   return (
     <div className="p-8 max-w-4xl">
+      {/* 30-day overdue banner */}
+      {(daysSinceVisit === null || daysSinceVisit >= 30) && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-xl px-5 py-4 flex items-start gap-3">
+          <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <p className="text-sm font-extrabold text-red-700">
+              {daysSinceVisit === null ? 'This provider has never been visited' : `This provider has not been visited in ${daysSinceVisit} days`}
+            </p>
+            <p className="text-xs text-red-500 mt-0.5">Prioritize on your next route.</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-6">
         <Link href="/dashboard/providers" className="text-xs font-bold text-pn-faint hover:text-pn-navy flex items-center gap-1 mb-4 uppercase tracking-wider transition-colors">
@@ -50,6 +66,7 @@ export default async function ProviderDetailPage({ params }: { params: { id: str
               <span className="inline-block px-2 py-0.5 bg-pn-sky text-pn-navy text-xs rounded font-bold">{p.specialty}</span>
               <span className="text-pn-muted text-sm font-medium">{p.city}, PR</span>
               {p.phone && <span className="text-pn-muted text-sm">{p.phone}</span>}
+              {p.npi && <span className="text-pn-faint text-xs font-medium">NPI: {p.npi}</span>}
             </div>
           </div>
           <Link
