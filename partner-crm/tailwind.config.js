@@ -13,9 +13,16 @@ export default {
     // Priority badge classes
     'bg-orange-100','text-orange-700',
     'bg-gray-200','text-gray-500',
+    // Task status badge classes
+    'bg-amber-100','text-amber-700',
+    // Stage / task border-top colors
+    'border-t-gray-300','border-t-sky-400','border-t-blue-400','border-t-blue-500',
+    'border-t-violet-500','border-t-emerald-500','border-t-red-400','border-t-amber-400',
     // Custom pn classes used dynamically
     'bg-pn-sky','text-pn-navy','bg-pn-lime','text-pn-green','text-pn-green-dark',
     'ring-2','ring-offset-1',
+    // Spin animation
+    'animate-spin',
   ],
   theme: {
     extend: {

@@ -7,27 +7,52 @@ import ListView from './components/ListView.jsx'
 import PartnerDetail from './components/PartnerDetail.jsx'
 import AddPartnerModal from './components/AddPartnerModal.jsx'
 import SetupModal from './components/SetupModal.jsx'
+import LoginPage from './components/LoginPage.jsx'
+import TaskBoard from './components/tasks/TaskBoard.jsx'
+import TaskCalendar from './components/tasks/TaskCalendar.jsx'
+import AddTaskModal from './components/tasks/AddTaskModal.jsx'
 
 export default function App() {
+  // ── Auth ─────────────────────────────────────────────────────────────────────
+  const [session, setSession] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setAuthLoading(false)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // ── Section ───────────────────────────────────────────────────────────────────
+  const [section, setSection] = useState('crm') // 'crm' | 'tasks'
+
+  // ── CRM state ─────────────────────────────────────────────────────────────────
   const [partners, setPartners] = useState([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(null)
-
-  const [view, setView] = useState('kanban')
+  const [crmView, setCrmView] = useState('kanban')
   const [selectedId, setSelectedId] = useState(null)
   const [editingPartner, setEditingPartner] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showSetupModal, setShowSetupModal] = useState(false)
+  const [filters, setFilters] = useState({ search: '', stage: '', priority: '', therapeuticArea: '' })
 
-  const [filters, setFilters] = useState({
-    search: '',
-    stage: '',
-    priority: '',
-    therapeuticArea: '',
-  })
+  // ── Tasks state ───────────────────────────────────────────────────────────────
+  const [tasks, setTasks] = useState([])
+  const [projects, setProjects] = useState([])
+  const [taskView, setTaskView] = useState('kanban')
+  const [editingTask, setEditingTask] = useState(null)
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false)
+  const [tasksLoading, setTasksLoading] = useState(false)
 
   const selectedPartner = partners.find(p => p.id === selectedId) ?? null
 
+  // ── Fetch CRM data ────────────────────────────────────────────────────────────
   const fetchPartners = useCallback(async () => {
     setLoading(true)
     setFetchError(null)
@@ -40,29 +65,37 @@ export default function App() {
     setLoading(false)
   }, [])
 
-  useEffect(() => {
-    if (isConfigured) fetchPartners()
-    else setLoading(false)
-  }, [fetchPartners])
+  // ── Fetch Tasks data ──────────────────────────────────────────────────────────
+  const fetchTasks = useCallback(async () => {
+    setTasksLoading(true)
+    const [{ data: tasksData }, { data: projectsData }] = await Promise.all([
+      supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+      supabase.from('projects').select('*').order('name'),
+    ])
+    setTasks(tasksData || [])
+    setProjects(projectsData || [])
+    setTasksLoading(false)
+  }, [])
 
+  useEffect(() => {
+    if (session && isConfigured) {
+      fetchPartners()
+      fetchTasks()
+    } else if (!session && !authLoading) {
+      setLoading(false)
+    }
+  }, [session, authLoading, fetchPartners, fetchTasks])
+
+  // ── CRM CRUD ──────────────────────────────────────────────────────────────────
   async function addPartner(formData) {
-    const { data, error } = await supabase
-      .from('partners')
-      .insert([formData])
-      .select()
-      .single()
+    const { data, error } = await supabase.from('partners').insert([formData]).select().single()
     if (error) throw error
     setPartners(prev => [data, ...prev])
     return data
   }
 
   async function updatePartner(id, updates) {
-    const { data, error } = await supabase
-      .from('partners')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
+    const { data, error } = await supabase.from('partners').update(updates).eq('id', id).select().single()
     if (error) throw error
     setPartners(prev => prev.map(p => p.id === id ? data : p))
     return data
@@ -75,11 +108,43 @@ export default function App() {
     if (selectedId === id) setSelectedId(null)
   }
 
+  // ── Tasks CRUD ────────────────────────────────────────────────────────────────
+  async function addTask(formData) {
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert([{ ...formData, created_by: session?.user?.email }])
+      .select()
+      .single()
+    if (error) throw error
+    setTasks(prev => [data, ...prev])
+    return data
+  }
+
+  async function updateTask(id, updates) {
+    const { data, error } = await supabase.from('tasks').update(updates).eq('id', id).select().single()
+    if (error) throw error
+    setTasks(prev => prev.map(t => t.id === id ? data : t))
+    return data
+  }
+
+  async function deleteTask(id) {
+    const { error } = await supabase.from('tasks').delete().eq('id', id)
+    if (error) throw error
+    setTasks(prev => prev.filter(t => t.id !== id))
+  }
+
+  async function createProject(formData) {
+    const { data, error } = await supabase.from('projects').insert([formData]).select().single()
+    if (error) throw error
+    setProjects(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)))
+    return data
+  }
+
+  // ── Derived ───────────────────────────────────────────────────────────────────
   const filteredPartners = partners.filter(p => {
     if (filters.search) {
       const q = filters.search.toLowerCase()
-      const hit =
-        p.company_name?.toLowerCase().includes(q) ||
+      const hit = p.company_name?.toLowerCase().includes(q) ||
         p.contact_name?.toLowerCase().includes(q) ||
         p.country?.toLowerCase().includes(q) ||
         (p.products || []).some(pr => pr.toLowerCase().includes(q))
@@ -91,12 +156,7 @@ export default function App() {
     return true
   })
 
-  function openEdit(partner) {
-    setEditingPartner(partner)
-    setShowAddModal(false)
-  }
-
-  // ── Not configured ─────────────────────────────────────────────────────────
+  // ── Guards ────────────────────────────────────────────────────────────────────
   if (!isConfigured) {
     return (
       <div className="min-h-screen bg-pn-bg flex items-center justify-center p-8">
@@ -113,10 +173,8 @@ export default function App() {
             <code className="bg-pn-bg px-1.5 py-0.5 rounded text-xs font-bold text-pn-navy">VITE_SUPABASE_ANON_KEY</code>{' '}
             to your environment variables, then create the Supabase tables.
           </p>
-          <button
-            onClick={() => setShowSetupModal(true)}
-            className="bg-pn-navy hover:bg-pn-navy-dark text-white font-bold px-5 py-2.5 rounded-lg text-sm transition-colors"
-          >
+          <button onClick={() => setShowSetupModal(true)}
+            className="bg-pn-navy hover:bg-pn-navy-dark text-white font-bold px-5 py-2.5 rounded-lg text-sm transition-colors">
             View Setup Instructions
           </button>
         </div>
@@ -125,70 +183,121 @@ export default function App() {
     )
   }
 
-  // ── Main app ───────────────────────────────────────────────────────────────
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-pn-bg flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-pn-border border-t-pn-navy rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!session) return <LoginPage />
+
+  // ── Main app ──────────────────────────────────────────────────────────────────
+  const currentView = section === 'crm' ? crmView : taskView
+  const setCurrentView = section === 'crm' ? setCrmView : setTaskView
+
   return (
     <div className="min-h-screen bg-pn-bg">
       <Navbar
-        view={view}
-        setView={setView}
-        onAddPartner={() => { setEditingPartner(null); setShowAddModal(true) }}
+        section={section}
+        setSection={setSection}
+        view={currentView}
+        setView={setCurrentView}
+        onAdd={section === 'crm'
+          ? () => { setEditingPartner(null); setShowAddModal(true) }
+          : () => { setEditingTask(null); setShowAddTaskModal(true) }
+        }
         onSetup={() => setShowSetupModal(true)}
-        totalCount={partners.length}
+        onSignOut={() => supabase.auth.signOut()}
+        userEmail={session.user.email}
       />
 
-      {/* Below fixed navbar (h-16) */}
       <div className="pt-16">
-        <FilterBar filters={filters} setFilters={setFilters} partners={partners} />
-
-        {loading ? (
-          <div className="flex items-center justify-center h-64 text-pn-muted text-sm font-medium">
-            Loading partners…
-          </div>
-        ) : fetchError ? (
-          <div className="p-8">
-            <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm">
-              <p className="font-bold mb-1">Error loading data</p>
-              <p className="font-mono text-xs break-all">{fetchError}</p>
-              <p className="mt-2 text-red-600 text-xs">Check that your Supabase env vars are correct and the tables exist.</p>
-            </div>
-          </div>
-        ) : view === 'kanban' ? (
-          <KanbanView partners={filteredPartners} onSelect={setSelectedId} />
+        {section === 'crm' ? (
+          <>
+            <FilterBar filters={filters} setFilters={setFilters} partners={partners} />
+            {loading ? (
+              <div className="flex items-center justify-center h-64 text-pn-muted text-sm font-medium">
+                Loading partners…
+              </div>
+            ) : fetchError ? (
+              <div className="p-8">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm">
+                  <p className="font-bold mb-1">Error loading data</p>
+                  <p className="font-mono text-xs break-all">{fetchError}</p>
+                  <p className="mt-2 text-red-600 text-xs">Check that your Supabase env vars are correct and the tables exist.</p>
+                </div>
+              </div>
+            ) : crmView === 'kanban' ? (
+              <KanbanView partners={filteredPartners} onSelect={setSelectedId} />
+            ) : (
+              <ListView partners={filteredPartners} onSelect={setSelectedId} />
+            )}
+          </>
         ) : (
-          <ListView partners={filteredPartners} onSelect={setSelectedId} />
+          tasksLoading ? (
+            <div className="flex items-center justify-center h-64 text-pn-muted text-sm font-medium">
+              Loading tasks…
+            </div>
+          ) : taskView === 'kanban' ? (
+            <TaskBoard
+              tasks={tasks}
+              projects={projects}
+              onEdit={t => { setEditingTask(t); setShowAddTaskModal(true) }}
+            />
+          ) : (
+            <TaskCalendar
+              tasks={tasks}
+              projects={projects}
+              onEdit={t => { setEditingTask(t); setShowAddTaskModal(true) }}
+            />
+          )
         )}
       </div>
 
-      {/* Partner detail drawer */}
+      {/* ── CRM modals ── */}
       {selectedPartner && (
         <PartnerDetail
           partner={selectedPartner}
           onClose={() => setSelectedId(null)}
           onUpdate={updatePartner}
           onDelete={deletePartner}
-          onEdit={() => openEdit(selectedPartner)}
+          onEdit={() => { setEditingPartner(selectedPartner); setSelectedId(null) }}
         />
       )}
-
-      {/* Add / Edit modal */}
       {(showAddModal || editingPartner) && (
         <AddPartnerModal
           partner={editingPartner ?? null}
           onClose={() => { setShowAddModal(false); setEditingPartner(null) }}
           onSave={async (data) => {
-            if (editingPartner) {
-              await updatePartner(editingPartner.id, data)
-              setEditingPartner(null)
-            } else {
-              await addPartner(data)
-              setShowAddModal(false)
-            }
+            if (editingPartner) { await updatePartner(editingPartner.id, data); setEditingPartner(null) }
+            else { await addPartner(data); setShowAddModal(false) }
           }}
         />
       )}
-
-      {/* Setup modal */}
       {showSetupModal && <SetupModal onClose={() => setShowSetupModal(false)} />}
+
+      {/* ── Task modal ── */}
+      {showAddTaskModal && (
+        <AddTaskModal
+          task={editingTask}
+          projects={projects}
+          onClose={() => { setShowAddTaskModal(false); setEditingTask(null) }}
+          onSave={async (data) => {
+            if (editingTask) await updateTask(editingTask.id, data)
+            else await addTask(data)
+            setShowAddTaskModal(false)
+            setEditingTask(null)
+          }}
+          onDelete={async () => {
+            if (editingTask) await deleteTask(editingTask.id)
+            setShowAddTaskModal(false)
+            setEditingTask(null)
+          }}
+          onCreateProject={createProject}
+        />
+      )}
     </div>
   )
 }
