@@ -57,11 +57,12 @@ export const STAGE_BORDER = {
 }
 
 // ── Tasks ────────────────────────────────────────────────────────────────────
-export const TASK_STATUSES = ['To Do', 'In Progress', 'In Review', 'Done']
+export const TASK_STATUSES = ['To Do', 'In Progress', 'Blocked', 'In Review', 'Done']
 
 export const TASK_STATUS_CLASSES = {
   'To Do':       'bg-gray-100 text-gray-600',
   'In Progress': 'bg-blue-100 text-blue-700',
+  'Blocked':     'bg-red-100 text-red-700',
   'In Review':   'bg-amber-100 text-amber-700',
   'Done':        'bg-emerald-100 text-emerald-700',
 }
@@ -69,6 +70,7 @@ export const TASK_STATUS_CLASSES = {
 export const TASK_STATUS_BORDER = {
   'To Do':       'border-t-gray-300',
   'In Progress': 'border-t-blue-400',
+  'Blocked':     'border-t-red-500',
   'In Review':   'border-t-amber-400',
   'Done':        'border-t-emerald-500',
 }
