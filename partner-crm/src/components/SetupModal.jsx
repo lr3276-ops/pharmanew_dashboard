@@ -34,7 +34,41 @@ create table if not exists partner_notes (
   partner_id  uuid references partners(id) on delete cascade,
   content     text not null,
   author      text
-);`
+);
+
+create table if not exists projects (
+  id         uuid default gen_random_uuid() primary key,
+  created_at timestamptz default now(),
+  name       text not null,
+  color      text not null default '#245293'
+);
+
+create table if not exists tasks (
+  id                 uuid default gen_random_uuid() primary key,
+  created_at         timestamptz default now(),
+  title              text not null,
+  description        text,
+  status             text not null default 'To Do'
+    check (status in ('To Do','In Progress','Blocked','In Review','Done')),
+  priority           text not null default 'Medium'
+    check (priority in ('High','Medium','Low')),
+  assignee           text,
+  due_date           date,
+  project_id         uuid references projects(id) on delete set null,
+  blocked_by_task_id uuid references tasks(id) on delete set null,
+  created_by         text
+);
+
+create table if not exists task_notes (
+  id         uuid default gen_random_uuid() primary key,
+  created_at timestamptz default now(),
+  task_id    uuid references tasks(id) on delete cascade,
+  content    text not null,
+  author     text
+);
+
+-- If you already have a tasks table, run this to add the blocker column:
+alter table tasks add column if not exists blocked_by_task_id uuid references tasks(id) on delete set null;`
 
 export default function SetupModal({ onClose }) {
   const [copied, setCopied] = useState(false)

@@ -1,7 +1,7 @@
 import { format, isPast, isToday, parseISO } from 'date-fns'
 import { PRIORITY_CLASSES } from '../../lib/constants.js'
 
-export default function TaskCard({ task, project, onClick }) {
+export default function TaskCard({ task, project, blockerTask, onClick }) {
   const overdue = task.due_date && task.status !== 'Done' && isPast(parseISO(task.due_date + 'T23:59:59'))
   const dueToday = task.due_date && task.status !== 'Done' && isToday(parseISO(task.due_date))
 
@@ -28,6 +28,18 @@ export default function TaskCard({ task, project, onClick }) {
       {/* Description preview */}
       {task.description && (
         <p className="text-xs text-pn-faint leading-relaxed mb-2.5 line-clamp-2">{task.description}</p>
+      )}
+
+      {/* Blocker indicator */}
+      {blockerTask && (
+        <div className="flex items-center gap-1 mb-2.5">
+          <svg className="w-3 h-3 text-orange-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          <span className="text-[11px] font-semibold text-orange-600 truncate">
+            Blocked by: {blockerTask.title}
+          </span>
+        </div>
       )}
 
       {/* Footer */}

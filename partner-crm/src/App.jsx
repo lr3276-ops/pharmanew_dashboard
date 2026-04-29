@@ -140,6 +140,13 @@ export default function App() {
     return data
   }
 
+  async function updateProject(id, updates) {
+    const { data, error } = await supabase.from('projects').update(updates).eq('id', id).select().single()
+    if (error) throw error
+    setProjects(prev => prev.map(p => p.id === id ? data : p).sort((a, b) => a.name.localeCompare(b.name)))
+    return data
+  }
+
   // ── Derived ───────────────────────────────────────────────────────────────────
   const filteredPartners = partners.filter(p => {
     if (filters.search) {
@@ -282,6 +289,7 @@ export default function App() {
       {showAddTaskModal && (
         <AddTaskModal
           task={editingTask}
+          tasks={tasks}
           projects={projects}
           onClose={() => { setShowAddTaskModal(false); setEditingTask(null) }}
           onSave={async (data) => {
@@ -296,6 +304,7 @@ export default function App() {
             setEditingTask(null)
           }}
           onCreateProject={createProject}
+          onUpdateProject={updateProject}
         />
       )}
     </div>

@@ -3,6 +3,7 @@ import { TASK_STATUSES, TASK_STATUS_BORDER, TASK_STATUS_CLASSES } from '../../li
 
 export default function TaskBoard({ tasks, projects, onEdit }) {
   const projectMap = Object.fromEntries(projects.map(p => [p.id, p]))
+  const taskMap = Object.fromEntries(tasks.map(t => [t.id, t]))
 
   const totalByStatus = Object.fromEntries(TASK_STATUSES.map(s => [s, tasks.filter(t => t.status === s).length]))
 
@@ -28,6 +29,7 @@ export default function TaskBoard({ tasks, projects, onEdit }) {
                     key={task.id}
                     task={task}
                     project={task.project_id ? projectMap[task.project_id] : null}
+                    blockerTask={task.blocked_by_task_id ? taskMap[task.blocked_by_task_id] : null}
                     onClick={() => onEdit(task)}
                   />
                 ))}
