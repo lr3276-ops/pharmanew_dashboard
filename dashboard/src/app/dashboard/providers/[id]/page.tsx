@@ -14,21 +14,46 @@ function outcomeColor(outcome: string) {
 }
 
 export default async function ProviderDetailPage({ params }: { params: { id: string } }) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-sm text-red-700">
+          <p className="font-semibold">Missing Supabase environment variables</p>
+        </div>
+      </div>
+    )
+  }
+
   const supabase = getSupabase()
   const id = parseInt(params.id)
+  let provider: Provider | null = null
+  let activities: RepActivity[] = []
 
-  const [{ data: provider }, { data: activities }] = await Promise.all([
-    supabase.from('providers').select('*').eq('id', id).single(),
-    supabase.from('rep_activities')
-      .select('*')
-      .eq('provider_id', id)
-      .order('visit_date', { ascending: false }),
-  ])
+  try {
+    const [{ data: p }, { data: a }] = await Promise.all([
+      supabase.from('providers').select('*').eq('id', id).single(),
+      supabase.from('rep_activities')
+        .select('*')
+        .eq('provider_id', id)
+        .order('visit_date', { ascending: false }),
+    ])
+    provider = p as Provider | null
+    activities = (a || []) as RepActivity[]
+  } catch (e: unknown) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-sm text-red-700">
+          <p className="font-semibold mb-1">Supabase connection error</p>
+          <p className="font-mono text-xs mt-2 break-all">{e instanceof Error ? e.message : String(e)}</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!provider) notFound()
 
   const p = provider as Provider
-  const acts = (activities || []) as RepActivity[]
+  const acts = activities
 
   const lastActivity = acts[0]
   const nextVisit = acts.find(a => a.next_visit_date)?.next_visit_date

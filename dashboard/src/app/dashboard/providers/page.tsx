@@ -5,15 +5,47 @@ import Link from 'next/link'
 import type { Provider } from '@/types'
 
 export default async function ProvidersPage() {
-  const supabase = getSupabase()
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-sm text-red-700">
+          <p className="font-semibold mb-1">Missing Supabase environment variables</p>
+          <p>NEXT_PUBLIC_SUPABASE_URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? 'set' : 'MISSING'}</p>
+          <p>SUPABASE_SERVICE_ROLE_KEY: {process.env.SUPABASE_SERVICE_ROLE_KEY ? 'set' : 'MISSING'}</p>
+        </div>
+      </div>
+    )
+  }
 
-  const [{ data: providers }, { data: activities }] = await Promise.all([
-    supabase.from('providers').select('*').eq('active', true).order('name'),
-    supabase.from('rep_activities').select('provider_id, visit_date').order('visit_date', { ascending: false }),
-  ])
+  const supabase = getSupabase()
+  let providers: Provider[] = []
+  let activities: { provider_id: number; visit_date: string }[] = []
+  let supabaseError: string | null = null
+
+  try {
+    const [{ data: p }, { data: a }] = await Promise.all([
+      supabase.from('providers').select('*').eq('active', true).order('name'),
+      supabase.from('rep_activities').select('provider_id, visit_date').order('visit_date', { ascending: false }),
+    ])
+    providers = (p || []) as Provider[]
+    activities = (a || []) as { provider_id: number; visit_date: string }[]
+  } catch (e: unknown) {
+    supabaseError = e instanceof Error ? e.message : String(e)
+  }
+
+  if (supabaseError) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-sm text-red-700">
+          <p className="font-semibold mb-1">Supabase connection error</p>
+          <p className="font-mono text-xs mt-2 break-all">{supabaseError}</p>
+        </div>
+      </div>
+    )
+  }
 
   const statsMap = new Map<number, { lastVisit: string; count: number }>()
-  for (const a of (activities || []) as { provider_id: number; visit_date: string }[]) {
+  for (const a of activities) {
     if (!statsMap.has(a.provider_id)) {
       statsMap.set(a.provider_id, { lastVisit: a.visit_date, count: 1 })
     } else {
@@ -21,7 +53,7 @@ export default async function ProvidersPage() {
     }
   }
 
-  const specialties = Array.from(new Set((providers || []).map((p: Provider) => p.specialty).filter(Boolean))).sort()
+  const specialties = Array.from(new Set(providers.map((p: Provider) => p.specialty).filter(Boolean))).sort()
 
   return (
     <div className="p-8">
