@@ -10,6 +10,7 @@ import SetupModal from './components/SetupModal.jsx'
 import LoginPage from './components/LoginPage.jsx'
 import TaskBoard from './components/tasks/TaskBoard.jsx'
 import TaskCalendar from './components/tasks/TaskCalendar.jsx'
+import TaskLog from './components/tasks/TaskLog.jsx'
 import AddTaskModal from './components/tasks/AddTaskModal.jsx'
 
 export default function App() {
@@ -110,9 +111,10 @@ export default function App() {
 
   // ── Tasks CRUD ────────────────────────────────────────────────────────────────
   async function addTask(formData) {
+    const completed_at = formData.status === 'Done' ? new Date().toISOString() : null
     const { data, error } = await supabase
       .from('tasks')
-      .insert([{ ...formData, created_by: session?.user?.email }])
+      .insert([{ ...formData, completed_at, created_by: session?.user?.email }])
       .select()
       .single()
     if (error) throw error
@@ -121,7 +123,14 @@ export default function App() {
   }
 
   async function updateTask(id, updates) {
-    const { data, error } = await supabase.from('tasks').update(updates).eq('id', id).select().single()
+    const prev = tasks.find(t => t.id === id)
+    let completed_at
+    if (updates.status === 'Done') {
+      completed_at = prev?.status === 'Done' ? (prev.completed_at ?? new Date().toISOString()) : new Date().toISOString()
+    } else {
+      completed_at = null
+    }
+    const { data, error } = await supabase.from('tasks').update({ ...updates, completed_at }).eq('id', id).select().single()
     if (error) throw error
     setTasks(prev => prev.map(t => t.id === id ? data : t))
     return data
@@ -253,8 +262,14 @@ export default function App() {
               projects={projects}
               onEdit={t => { setEditingTask(t); setShowAddTaskModal(true) }}
             />
-          ) : (
+          ) : taskView === 'calendar' ? (
             <TaskCalendar
+              tasks={tasks}
+              projects={projects}
+              onEdit={t => { setEditingTask(t); setShowAddTaskModal(true) }}
+            />
+          ) : (
+            <TaskLog
               tasks={tasks}
               projects={projects}
               onEdit={t => { setEditingTask(t); setShowAddTaskModal(true) }}

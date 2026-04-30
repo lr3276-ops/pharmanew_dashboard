@@ -1,17 +1,26 @@
 import TaskCard from './TaskCard.jsx'
 import { TASK_STATUSES, TASK_STATUS_BORDER, TASK_STATUS_CLASSES } from '../../lib/constants.js'
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
+
 export default function TaskBoard({ tasks, projects, onEdit }) {
   const projectMap = Object.fromEntries(projects.map(p => [p.id, p]))
+
+  const visibleTasks = tasks.filter(t => {
+    if (t.status !== 'Done') return true
+    if (!t.completed_at) return true
+    return Date.now() - new Date(t.completed_at).getTime() < SEVEN_DAYS_MS
+  })
+
   const taskMap = Object.fromEntries(tasks.map(t => [t.id, t]))
 
-  const totalByStatus = Object.fromEntries(TASK_STATUSES.map(s => [s, tasks.filter(t => t.status === s).length]))
+  const totalByStatus = Object.fromEntries(TASK_STATUSES.map(s => [s, visibleTasks.filter(t => t.status === s).length]))
 
   return (
     <div className="p-6 overflow-x-auto">
       <div className="flex gap-4 min-w-max pb-4">
         {TASK_STATUSES.map(status => {
-          const col = tasks.filter(t => t.status === status)
+          const col = visibleTasks.filter(t => t.status === status)
           return (
             <div key={status} className="w-72 flex-shrink-0 flex flex-col">
               {/* Column header */}

@@ -56,6 +56,7 @@ create table if not exists tasks (
   due_date           date,
   project_id         uuid references projects(id) on delete set null,
   blocked_by_task_id uuid references tasks(id) on delete set null,
+  completed_at       timestamptz,
   created_by         text
 );
 
@@ -67,8 +68,9 @@ create table if not exists task_notes (
   author     text
 );
 
--- If you already have a tasks table, run this to add the blocker column:
-alter table tasks add column if not exists blocked_by_task_id uuid references tasks(id) on delete set null;`
+-- If you already have a tasks table, run these to add the new columns:
+alter table tasks add column if not exists blocked_by_task_id uuid references tasks(id) on delete set null;
+alter table tasks add column if not exists completed_at timestamptz;`
 
 export default function SetupModal({ onClose }) {
   const [copied, setCopied] = useState(false)
