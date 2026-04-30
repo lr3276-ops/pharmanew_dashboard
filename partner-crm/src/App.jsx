@@ -11,6 +11,7 @@ import LoginPage from './components/LoginPage.jsx'
 import TaskBoard from './components/tasks/TaskBoard.jsx'
 import TaskCalendar from './components/tasks/TaskCalendar.jsx'
 import TaskLog from './components/tasks/TaskLog.jsx'
+import ProjectsView from './components/tasks/ProjectsView.jsx'
 import AddTaskModal from './components/tasks/AddTaskModal.jsx'
 
 export default function App() {
@@ -156,6 +157,13 @@ export default function App() {
     return data
   }
 
+  async function deleteProject(id) {
+    const { error } = await supabase.from('projects').delete().eq('id', id)
+    if (error) throw error
+    setProjects(prev => prev.filter(p => p.id !== id))
+    setTasks(prev => prev.map(t => t.project_id === id ? { ...t, project_id: null } : t))
+  }
+
   // ── Derived ───────────────────────────────────────────────────────────────────
   const filteredPartners = partners.filter(p => {
     if (filters.search) {
@@ -222,6 +230,7 @@ export default function App() {
         setView={setCurrentView}
         onAdd={section === 'crm'
           ? () => { setEditingPartner(null); setShowAddModal(true) }
+          : taskView === 'projects' ? null
           : () => { setEditingTask(null); setShowAddTaskModal(true) }
         }
         onSetup={() => setShowSetupModal(true)}
@@ -268,11 +277,19 @@ export default function App() {
               projects={projects}
               onEdit={t => { setEditingTask(t); setShowAddTaskModal(true) }}
             />
-          ) : (
+          ) : taskView === 'log' ? (
             <TaskLog
               tasks={tasks}
               projects={projects}
               onEdit={t => { setEditingTask(t); setShowAddTaskModal(true) }}
+            />
+          ) : (
+            <ProjectsView
+              projects={projects}
+              tasks={tasks}
+              onCreateProject={createProject}
+              onUpdateProject={updateProject}
+              onDeleteProject={deleteProject}
             />
           )
         )}

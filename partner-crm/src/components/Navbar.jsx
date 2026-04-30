@@ -1,7 +1,7 @@
 export default function Navbar({
   section, setSection,
   view, setView,
-  onAdd, onSetup,
+  onAdd = null, onSetup,
   onSignOut, userEmail,
 }) {
   return (
@@ -92,6 +92,16 @@ export default function Navbar({
                 </svg>
                 Log
               </button>
+              <button onClick={() => setView('projects')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                  view === 'projects' ? 'bg-white text-pn-navy shadow-sm' : 'text-pn-faint hover:text-pn-dark'
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+                </svg>
+                Projects
+              </button>
             </>
           )}
         </div>
@@ -104,17 +114,19 @@ export default function Navbar({
               Setup
             </button>
           )}
-          <button
-            onClick={onAdd}
-            className={`flex items-center gap-1.5 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors ${
-              section === 'crm' ? 'bg-pn-green hover:bg-pn-green-dark' : 'bg-pn-navy hover:bg-pn-navy-dark'
-            }`}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            {section === 'crm' ? 'Add Partner' : 'Add Task'}
-          </button>
+          {onAdd && (
+            <button
+              onClick={onAdd}
+              className={`flex items-center gap-1.5 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors ${
+                section === 'crm' ? 'bg-pn-green hover:bg-pn-green-dark' : 'bg-pn-navy hover:bg-pn-navy-dark'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              {section === 'crm' ? 'Add Partner' : 'Add Task'}
+            </button>
+          )}
 
           {/* User / sign out */}
           <div className="flex items-center gap-2 pl-3 ml-1 border-l border-pn-border">
