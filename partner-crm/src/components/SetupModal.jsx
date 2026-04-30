@@ -37,10 +37,11 @@ create table if not exists partner_notes (
 );
 
 create table if not exists projects (
-  id         uuid default gen_random_uuid() primary key,
-  created_at timestamptz default now(),
-  name       text not null,
-  color      text not null default '#245293'
+  id          uuid default gen_random_uuid() primary key,
+  created_at  timestamptz default now(),
+  name        text not null,
+  color       text not null default '#245293',
+  description text
 );
 
 create table if not exists tasks (
@@ -68,9 +69,10 @@ create table if not exists task_notes (
   author     text
 );
 
--- If you already have a tasks table, run these to add the new columns:
+-- If you already have these tables, run these to add the new columns:
 alter table tasks add column if not exists blocked_by_task_id uuid references tasks(id) on delete set null;
-alter table tasks add column if not exists completed_at timestamptz;`
+alter table tasks add column if not exists completed_at timestamptz;
+alter table projects add column if not exists description text;`
 
 export default function SetupModal({ onClose }) {
   const [copied, setCopied] = useState(false)

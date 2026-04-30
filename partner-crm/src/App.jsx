@@ -290,6 +290,7 @@ export default function App() {
               onCreateProject={createProject}
               onUpdateProject={updateProject}
               onDeleteProject={deleteProject}
+              onEditTask={t => { setEditingTask(t); setShowAddTaskModal(true) }}
             />
           )
         )}
