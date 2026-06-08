@@ -16,7 +16,8 @@ function KPICard({ label, value, sub, accent }: { label: string; value: number; 
   )
 }
 
-function outcomeColor(outcome: string) {
+function outcomeColor(outcome: string | null | undefined) {
+  if (!outcome) return 'bg-pn-bg text-pn-muted'
   if (outcome.includes('Very Positive')) return 'bg-pn-lime text-pn-green-dark'
   if (outcome.includes('Positive')) return 'bg-green-100 text-green-800'
   if (outcome.includes('Neutral')) return 'bg-pn-bg text-pn-muted'
@@ -153,7 +154,7 @@ export default async function DashboardPage() {
               <tbody>
                 {(recentMine as RepActivity[]).map((a, i) => (
                   <tr key={a.id} className={i < recentMine!.length - 1 ? 'border-b border-pn-border' : ''}>
-                    <td className="px-4 py-3 text-pn-muted whitespace-nowrap">{format(new Date(a.visit_date + 'T12:00:00'), 'MMM d, yyyy')}</td>
+                    <td className="px-4 py-3 text-pn-muted whitespace-nowrap">{a.visit_date ? format(new Date(a.visit_date + 'T12:00:00'), 'MMM d, yyyy') : '—'}</td>
                     <td className="px-4 py-3 font-semibold text-pn-dark">{a.provider_name}</td>
                     <td className="px-4 py-3 text-pn-muted">{a.call_type}</td>
                     <td className="px-4 py-3 text-pn-muted">{(a.products_discussed || []).join(', ') || '—'}</td>
@@ -192,7 +193,7 @@ export default async function DashboardPage() {
               <tbody>
                 {(recentTeam as RepActivity[]).map((a, i) => (
                   <tr key={a.id} className={i < recentTeam!.length - 1 ? 'border-b border-pn-border' : ''}>
-                    <td className="px-4 py-3 text-pn-muted whitespace-nowrap">{format(new Date(a.visit_date + 'T12:00:00'), 'MMM d, yyyy')}</td>
+                    <td className="px-4 py-3 text-pn-muted whitespace-nowrap">{a.visit_date ? format(new Date(a.visit_date + 'T12:00:00'), 'MMM d, yyyy') : '—'}</td>
                     <td className="px-4 py-3 text-pn-muted font-medium">{a.rep_name}</td>
                     <td className="px-4 py-3 font-semibold text-pn-dark">{a.provider_name}</td>
                     <td className="px-4 py-3 text-pn-muted">{a.call_type}</td>
