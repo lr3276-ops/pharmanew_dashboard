@@ -42,7 +42,6 @@ export default async function DashboardPage() {
   }
 
   let supabaseError: string | null = null
-  const supabase = getSupabase()
   const today = new Date()
   const monthStart = format(startOfMonth(today), 'yyyy-MM-dd')
   const monthLabel = format(today, 'MMMM yyyy')
@@ -53,6 +52,7 @@ export default async function DashboardPage() {
   let recentTeam: RepActivity[] = []
 
   try {
+  const supabase = getSupabase()
   const [
     { count: _myTotal },
     { count: _myVisits },
