@@ -13,6 +13,7 @@ import TaskCalendar from './components/tasks/TaskCalendar.jsx'
 import TaskLog from './components/tasks/TaskLog.jsx'
 import ProjectsView from './components/tasks/ProjectsView.jsx'
 import AddTaskModal from './components/tasks/AddTaskModal.jsx'
+import PartnerProjectsView from './components/projects/PartnerProjectsView.jsx'
 
 export default function App() {
   // ── Auth ─────────────────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ export default function App() {
   }, [])
 
   // ── Section ───────────────────────────────────────────────────────────────────
-  const [section, setSection] = useState('crm') // 'crm' | 'tasks'
+  const [section, setSection] = useState('crm') // 'crm' | 'tasks' | 'projects'
 
   // ── CRM state ─────────────────────────────────────────────────────────────────
   const [partners, setPartners] = useState([])
@@ -43,6 +44,9 @@ export default function App() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showSetupModal, setShowSetupModal] = useState(false)
   const [filters, setFilters] = useState({ search: '', stage: '', priority: '', therapeuticArea: '' })
+
+  // ── Partner Projects state ────────────────────────────────────────────────────
+  const [partnerProjects, setPartnerProjects] = useState([])
 
   // ── Tasks state ───────────────────────────────────────────────────────────────
   const [tasks, setTasks] = useState([])
@@ -67,6 +71,15 @@ export default function App() {
     setLoading(false)
   }, [])
 
+  // ── Fetch Partner Projects ────────────────────────────────────────────────────
+  const fetchPartnerProjects = useCallback(async () => {
+    const { data } = await supabase
+      .from('partner_projects')
+      .select('*')
+      .order('created_at', { ascending: false })
+    setPartnerProjects(data || [])
+  }, [])
+
   // ── Fetch Tasks data ──────────────────────────────────────────────────────────
   const fetchTasks = useCallback(async () => {
     setTasksLoading(true)
@@ -83,10 +96,11 @@ export default function App() {
     if (session && isConfigured) {
       fetchPartners()
       fetchTasks()
+      fetchPartnerProjects()
     } else if (!session && !authLoading) {
       setLoading(false)
     }
-  }, [session, authLoading, fetchPartners, fetchTasks])
+  }, [session, authLoading, fetchPartners, fetchTasks, fetchPartnerProjects])
 
   // ── CRM CRUD ──────────────────────────────────────────────────────────────────
   async function addPartner(formData) {
@@ -164,6 +178,27 @@ export default function App() {
     setTasks(prev => prev.map(t => t.project_id === id ? { ...t, project_id: null } : t))
   }
 
+  // ── Partner Projects CRUD ─────────────────────────────────────────────────────
+  async function createPartnerProject(formData) {
+    const { data, error } = await supabase.from('partner_projects').insert([formData]).select().single()
+    if (error) throw error
+    setPartnerProjects(prev => [data, ...prev])
+    return data
+  }
+
+  async function updatePartnerProject(id, updates) {
+    const { data, error } = await supabase.from('partner_projects').update(updates).eq('id', id).select().single()
+    if (error) throw error
+    setPartnerProjects(prev => prev.map(p => p.id === id ? data : p))
+    return data
+  }
+
+  async function deletePartnerProject(id) {
+    const { error } = await supabase.from('partner_projects').delete().eq('id', id)
+    if (error) throw error
+    setPartnerProjects(prev => prev.filter(p => p.id !== id))
+  }
+
   // ── Derived ───────────────────────────────────────────────────────────────────
   const filteredPartners = partners.filter(p => {
     if (filters.search) {
@@ -230,6 +265,7 @@ export default function App() {
         setView={setCurrentView}
         onAdd={section === 'crm'
           ? () => { setEditingPartner(null); setShowAddModal(true) }
+          : section === 'projects' ? null
           : taskView === 'projects' ? null
           : () => { setEditingTask(null); setShowAddTaskModal(true) }
         }
@@ -260,6 +296,14 @@ export default function App() {
               <ListView partners={filteredPartners} onSelect={setSelectedId} />
             )}
           </>
+        ) : section === 'projects' ? (
+          <PartnerProjectsView
+            partnerProjects={partnerProjects}
+            partners={partners}
+            onCreate={createPartnerProject}
+            onUpdate={updatePartnerProject}
+            onDelete={deletePartnerProject}
+          />
         ) : (
           tasksLoading ? (
             <div className="flex items-center justify-center h-64 text-pn-muted text-sm font-medium">

@@ -29,11 +29,19 @@ export default function Navbar({
             >
               Team Tasks
             </button>
+            <button
+              onClick={() => setSection('projects')}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors whitespace-nowrap ${
+                section === 'projects' ? 'bg-white text-pn-navy shadow-sm' : 'text-pn-faint hover:text-pn-dark'
+              }`}
+            >
+              Deal Projects
+            </button>
           </div>
         </div>
 
-        {/* View toggle */}
-        <div className="flex items-center gap-1 bg-pn-bg border border-pn-border rounded-lg p-1">
+        {/* View toggle — hidden for Deal Projects section */}
+        {section !== 'projects' && <div className="flex items-center gap-1 bg-pn-bg border border-pn-border rounded-lg p-1">
           {section === 'crm' ? (
             <>
               <button onClick={() => setView('kanban')}
@@ -104,7 +112,7 @@ export default function Navbar({
               </button>
             </>
           )}
-        </div>
+        </div>}
 
         {/* Right actions */}
         <div className="flex items-center gap-2 flex-shrink-0">

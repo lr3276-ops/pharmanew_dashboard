@@ -75,6 +75,22 @@ export const TASK_STATUS_BORDER = {
   'Done':        'border-t-emerald-500',
 }
 
+// ── Partner Projects ─────────────────────────────────────────────────────────
+export const DEAL_PROJECT_STATUSES = ['Planning', 'Active', 'On Hold', 'Completed']
+
+export const DEAL_PROJECT_STATUS_CLASSES = {
+  'Planning':  'bg-gray-100 text-gray-600',
+  'Active':    'bg-blue-100 text-blue-700',
+  'On Hold':   'bg-amber-100 text-amber-700',
+  'Completed': 'bg-emerald-100 text-emerald-700',
+}
+
+export const MILESTONE_NEXT = {
+  'Not Started': 'In Progress',
+  'In Progress': 'Done',
+  'Done':        'Not Started',
+}
+
 export const PROJECT_COLORS = [
   '#245293',
   '#519831',
