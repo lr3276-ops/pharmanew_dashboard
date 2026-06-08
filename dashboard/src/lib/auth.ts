@@ -11,9 +11,9 @@ export async function createToken(repName: string): Promise<string> {
 }
 
 export async function getSession(): Promise<{ repName: string } | null> {
-  const token = cookies().get('session')?.value
-  if (!token) return null
   try {
+    const token = cookies().get('session')?.value
+    if (!token) return null
     const { payload } = await jwtVerify(token, getSecret())
     return { repName: payload.repName as string }
   } catch {

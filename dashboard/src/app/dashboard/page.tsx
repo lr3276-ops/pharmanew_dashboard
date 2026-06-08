@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth'
 import { getSupabase } from '@/lib/supabase'
 import { format, startOfMonth } from 'date-fns'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import type { RepActivity } from '@/types'
 
 function KPICard({ label, value, sub, accent }: { label: string; value: number; sub?: string; accent?: string }) {
@@ -25,6 +26,7 @@ function outcomeColor(outcome: string) {
 
 export default async function DashboardPage() {
   const session = await getSession()
+  if (!session) redirect('/login')
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return (
