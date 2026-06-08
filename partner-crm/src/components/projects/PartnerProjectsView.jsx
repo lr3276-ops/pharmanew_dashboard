@@ -108,25 +108,32 @@ function ProjectRow({ project, partners, onUpdate, onDelete }) {
 
   async function toggleStep(id) {
     setTogglingStep(id)
+    setError('')
     const updated = steps.map(s => s.id === id ? { ...s, done: !s.done } : s)
-    try { await onUpdate(project.id, { steps: updated }) } catch (_) {}
+    try { await onUpdate(project.id, { steps: updated }) }
+    catch (err) { setError(err.message) }
     setTogglingStep(null)
   }
 
   async function addStep() {
     if (!newStep.trim()) return
     setAddingStep(true)
+    setError('')
     const updated = [...steps, { id: uid(), title: newStep.trim(), done: false }]
     try {
       await onUpdate(project.id, { steps: updated })
       setNewStep('')
-    } catch (_) {}
+    } catch (err) {
+      setError(err.message)
+    }
     setAddingStep(false)
   }
 
   async function deleteStep(id) {
+    setError('')
     const updated = steps.filter(s => s.id !== id)
-    try { await onUpdate(project.id, { steps: updated }) } catch (_) {}
+    try { await onUpdate(project.id, { steps: updated }) }
+    catch (err) { setError(err.message) }
   }
 
   async function handleDelete() {
@@ -330,6 +337,10 @@ function ProjectRow({ project, partners, onUpdate, onDelete }) {
                 <span>Partner: <span className="font-semibold text-pn-muted">{partner.company_name}</span></span>
               )}
             </div>
+          )}
+
+          {error && (
+            <p className="text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
           )}
 
           {/* Steps + progress */}
