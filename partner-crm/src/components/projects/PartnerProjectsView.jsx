@@ -4,43 +4,41 @@ import {
   PROJECT_COLORS,
   DEAL_PROJECT_STATUSES,
   DEAL_PROJECT_STATUS_CLASSES,
-  MILESTONE_NEXT,
 } from '../../lib/constants.js'
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
 }
 
-function ProgressBar({ milestones }) {
-  const total = milestones?.length || 0
-  if (!total) return <span className="text-[11px] text-pn-faint italic">No milestones</span>
-  const done = milestones.filter(m => m.status === 'Done').length
+function ProgressBar({ steps, compact = false }) {
+  const total = steps?.length || 0
+  if (!total) return <span className="text-[11px] text-pn-faint italic">No steps added</span>
+  const done = steps.filter(s => s.done).length
   const pct = Math.round((done / total) * 100)
-  return (
-    <div className="flex items-center gap-2">
-      <div className="w-24 bg-pn-border rounded-full h-1.5 overflow-hidden flex-shrink-0">
-        <div
-          className={`h-full rounded-full transition-all ${pct === 100 ? 'bg-pn-green' : 'bg-pn-blue'}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="text-[11px] font-bold text-pn-faint whitespace-nowrap">{done}/{total}</span>
-    </div>
-  )
-}
+  const color = pct === 100 ? 'bg-pn-green' : 'bg-pn-blue'
 
-function MilestoneDot({ status }) {
-  if (status === 'Done') return (
-    <div className="w-5 h-5 rounded-full bg-pn-green flex items-center justify-center flex-shrink-0">
-      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-      </svg>
+  if (compact) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="w-20 bg-pn-border rounded-full h-1.5 overflow-hidden flex-shrink-0">
+          <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+        </div>
+        <span className="text-[11px] font-bold text-pn-faint whitespace-nowrap">{pct}%</span>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div className="flex items-end justify-between mb-1.5">
+        <span className="text-xs font-bold text-pn-faint">{done} of {total} steps done</span>
+        <span className={`text-xl font-extrabold ${pct === 100 ? 'text-pn-green' : 'text-pn-blue'}`}>{pct}%</span>
+      </div>
+      <div className="w-full bg-pn-border rounded-full h-2 overflow-hidden">
+        <div className={`h-full rounded-full transition-all duration-300 ${color}`} style={{ width: `${pct}%` }} />
+      </div>
     </div>
   )
-  if (status === 'In Progress') return (
-    <div className="w-5 h-5 rounded-full border-2 border-pn-blue bg-pn-sky flex-shrink-0" />
-  )
-  return <div className="w-5 h-5 rounded-full border-2 border-gray-300 bg-white flex-shrink-0" />
 }
 
 // ── ProjectRow ────────────────────────────────────────────────────────────────
@@ -61,13 +59,14 @@ function ProjectRow({ project, partners, onUpdate, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
-  const [newMilestone, setNewMilestone] = useState('')
-  const [addingMs, setAddingMs] = useState(false)
-  const [togglingMs, setTogglingMs] = useState(null)
+  const [newStep, setNewStep] = useState('')
+  const [addingStep, setAddingStep] = useState(false)
+  const [togglingStep, setTogglingStep] = useState(null)
 
-  const milestones = project.milestones || []
+  const steps = project.steps || []
   const partner = partners.find(p => p.id === project.partner_id)
-  const doneCt = milestones.filter(m => m.status === 'Done').length
+  const doneCt = steps.filter(s => s.done).length
+  const pct = steps.length > 0 ? Math.round((doneCt / steps.length) * 100) : null
   const isOverdue = project.target_date &&
     isPast(parseISO(project.target_date + 'T23:59:59')) &&
     project.status !== 'Completed'
@@ -107,32 +106,27 @@ function ProjectRow({ project, partners, onUpdate, onDelete }) {
     setSaving(false)
   }
 
-  async function toggleMilestone(id) {
-    setTogglingMs(id)
-    const updated = milestones.map(m =>
-      m.id === id ? { ...m, status: MILESTONE_NEXT[m.status] } : m
-    )
-    try { await onUpdate(project.id, { milestones: updated }) } catch (_) {}
-    setTogglingMs(null)
+  async function toggleStep(id) {
+    setTogglingStep(id)
+    const updated = steps.map(s => s.id === id ? { ...s, done: !s.done } : s)
+    try { await onUpdate(project.id, { steps: updated }) } catch (_) {}
+    setTogglingStep(null)
   }
 
-  async function addMilestone() {
-    if (!newMilestone.trim()) return
-    setAddingMs(true)
-    const updated = [
-      ...milestones,
-      { id: uid(), title: newMilestone.trim(), status: 'Not Started', due_date: null },
-    ]
+  async function addStep() {
+    if (!newStep.trim()) return
+    setAddingStep(true)
+    const updated = [...steps, { id: uid(), title: newStep.trim(), done: false }]
     try {
-      await onUpdate(project.id, { milestones: updated })
-      setNewMilestone('')
+      await onUpdate(project.id, { steps: updated })
+      setNewStep('')
     } catch (_) {}
-    setAddingMs(false)
+    setAddingStep(false)
   }
 
-  async function deleteMilestone(id) {
-    const updated = milestones.filter(m => m.id !== id)
-    try { await onUpdate(project.id, { milestones: updated }) } catch (_) {}
+  async function deleteStep(id) {
+    const updated = steps.filter(s => s.id !== id)
+    try { await onUpdate(project.id, { steps: updated }) } catch (_) {}
   }
 
   async function handleDelete() {
@@ -181,12 +175,24 @@ function ProjectRow({ project, partners, onUpdate, onDelete }) {
                 </span>
               )}
             </div>
-            {milestones.length > 0 && (
+            {steps.length > 0 && (
               <div className="mt-2">
-                <ProgressBar milestones={milestones} />
+                <ProgressBar steps={steps} compact />
               </div>
             )}
           </div>
+
+          {/* % badge */}
+          {pct !== null && (
+            <div
+              className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full border-2 bg-white"
+              style={{ borderColor: pct === 100 ? '#519831' : '#0872c7' }}
+            >
+              <span className={`text-[11px] font-extrabold ${pct === 100 ? 'text-pn-green' : 'text-pn-blue'}`}>
+                {pct}%
+              </span>
+            </div>
+          )}
 
           {/* Action buttons */}
           <div
@@ -326,36 +332,47 @@ function ProjectRow({ project, partners, onUpdate, onDelete }) {
             </div>
           )}
 
-          {/* Milestones */}
+          {/* Steps + progress */}
           <div>
+            {steps.length > 0 && (
+              <div className="mb-3">
+                <ProgressBar steps={steps} />
+              </div>
+            )}
+
             <p className="text-xs font-bold text-pn-faint uppercase tracking-wider mb-2">
-              Milestones {milestones.length > 0 && `· ${doneCt} of ${milestones.length} done`}
+              Steps {steps.length > 0 && `· ${doneCt}/${steps.length} done`}
             </p>
 
-            {milestones.length === 0 ? (
-              <p className="text-xs text-pn-faint italic mb-2">No milestones yet — add one below.</p>
+            {steps.length === 0 ? (
+              <p className="text-xs text-pn-faint italic mb-2">No steps yet — add one below.</p>
             ) : (
-              <div className="space-y-1.5 mb-3">
-                {milestones.map(m => (
-                  <div key={m.id} className="flex items-center gap-2.5 group/m">
+              <div className="space-y-1 mb-3">
+                {steps.map(s => (
+                  <div key={s.id} className="flex items-center gap-2.5 group/s">
                     <button
-                      onClick={() => toggleMilestone(m.id)}
-                      disabled={togglingMs === m.id}
-                      title={`Status: ${m.status} — click to advance`}
-                      className="flex-shrink-0 disabled:opacity-50"
+                      onClick={() => toggleStep(s.id)}
+                      disabled={togglingStep === s.id}
+                      className="flex-shrink-0 disabled:opacity-50 focus:outline-none"
+                      title={s.done ? 'Mark as not done' : 'Mark as done'}
                     >
-                      <MilestoneDot status={m.status} />
+                      {s.done ? (
+                        <div className="w-5 h-5 rounded bg-pn-green flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      ) : (
+                        <div className="w-5 h-5 rounded border-2 border-gray-300 hover:border-pn-blue bg-white transition-colors" />
+                      )}
                     </button>
-                    <span className={`flex-1 text-sm min-w-0 ${m.status === 'Done' ? 'line-through text-pn-faint' : 'text-pn-dark'}`}>
-                      {m.title}
+                    <span className={`flex-1 text-sm min-w-0 ${s.done ? 'line-through text-pn-faint' : 'text-pn-dark'}`}>
+                      {s.title}
                     </span>
-                    {m.status !== 'Done' && (
-                      <span className="text-[11px] text-pn-faint flex-shrink-0">{m.status}</span>
-                    )}
                     <button
-                      onClick={() => deleteMilestone(m.id)}
-                      className="p-0.5 text-pn-faint hover:text-red-500 opacity-0 group-hover/m:opacity-100 transition-opacity flex-shrink-0"
-                      title="Remove milestone"
+                      onClick={() => deleteStep(s.id)}
+                      className="p-0.5 text-pn-faint hover:text-red-500 opacity-0 group-hover/s:opacity-100 transition-opacity flex-shrink-0"
+                      title="Remove step"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -366,22 +383,22 @@ function ProjectRow({ project, partners, onUpdate, onDelete }) {
               </div>
             )}
 
-            {/* Add milestone */}
+            {/* Add step */}
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                value={newMilestone}
-                onChange={e => setNewMilestone(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') addMilestone() }}
-                placeholder="Add a milestone or phase…"
+                value={newStep}
+                onChange={e => setNewStep(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addStep() }}
+                placeholder="Add a step…"
                 className="flex-1 px-2.5 py-1.5 text-xs border border-pn-border-mid rounded-lg focus:outline-none focus:ring-1 focus:ring-pn-navy text-pn-dark"
               />
               <button
-                onClick={addMilestone}
-                disabled={addingMs || !newMilestone.trim()}
+                onClick={addStep}
+                disabled={addingStep || !newStep.trim()}
                 className="bg-pn-navy hover:bg-pn-navy-dark disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
               >
-                {addingMs ? '…' : 'Add'}
+                {addingStep ? '…' : 'Add'}
               </button>
             </div>
           </div>
@@ -420,7 +437,7 @@ function NewProjectForm({ partners, onCreate, onCancel }) {
         target_date: form.target_date || null,
         partner_id: form.partner_id || null,
         color: form.color,
-        milestones: [],
+        steps: [],
       })
     } catch (err) {
       setError(err.message)
@@ -594,7 +611,7 @@ export default function PartnerProjectsView({ partnerProjects, partners, onCreat
         <div className="bg-white rounded-xl border border-pn-border p-12 text-center">
           <p className="text-pn-faint text-sm">
             {statusFilter === 'All'
-              ? 'No projects yet. Create one to start tracking milestones.'
+              ? 'No projects yet. Create one to start tracking steps and progress.'
               : `No ${statusFilter.toLowerCase()} projects.`}
           </p>
         </div>

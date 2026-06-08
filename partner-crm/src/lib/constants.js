@@ -85,12 +85,6 @@ export const DEAL_PROJECT_STATUS_CLASSES = {
   'Completed': 'bg-emerald-100 text-emerald-700',
 }
 
-export const MILESTONE_NEXT = {
-  'Not Started': 'In Progress',
-  'In Progress': 'Done',
-  'Done':        'Not Started',
-}
-
 export const PROJECT_COLORS = [
   '#245293',
   '#519831',
